@@ -1,80 +1,74 @@
-/* * Judul: Fire Alarm System with Blynk
- * Hardware: ESP32, Flame Sensor (D23), Buzzer (D21)
- * Author: Fariz Husain Albar
+/* Project : Fire Alarm
+ * Hardware: ESP32, Flame Sensor
+ * Penyusun: Fariz Husain Albar
  */
 
-// --- KREDENSIAL BLYNK ---
-// (Salin dari Device Info di Dashboard Blynk)
 #define BLYNK_TEMPLATE_ID "TMPL6ccfM0LkC" 
 #define BLYNK_TEMPLATE_NAME "Sistem Peringatan Kebakaran"
 #define BLYNK_AUTH_TOKEN "_SRNbHVGll7zvuy41FN8f1CEqZIw0Hyg"
 
-// --- KONFIGURASI ---
 #define BLYNK_PRINT Serial
 #include <WiFi.h>
 #include <BlynkSimpleEsp32.h>
 
-// Kredensial WiFi
 char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "uhuy";    // SSID WiFi Anda
-char pass[] = "gantengnyo";   // Password WiFi Anda
+char ssid[] = "lambor";
+char pass[] = "gantengnyo";
 
-// Definisi Pin
-const int pinFlame = 23;  // Sensor Api di Pin D23
-const int pinBuzzer = 21; // Buzzer di Pin D21
+// Disini Tulis Masing" PIN Dimanaa
+const int pinFlame = 34;  // ke pin ADC (D34/D35/VP/VN)
+const int pinBuzzer = 21; // Buzzer di D21
 
-// Variabel
-int flameState = 0;       
-bool isNotified = false;  
+int flameValue = 0;       // Variabel menampung nilai (0 - 4095)
+bool isNotified = false;
 BlynkTimer timer;
 
-// Fungsi Pembacaan Sensor
 void checkSensor() {
-  // 1. BACA SENSOR
-  flameState = digitalRead(pinFlame);
+  // 1. BACA SENSOR (ANALOG)
+  flameValue = analogRead(pinFlame);
   
   // 2. DEBUGGING
-  Serial.print("Nilai Sensor: ");
-  Serial.println(flameState);
+  Serial.print("Nilai Analog Api: ");
+  Serial.println(flameValue);
 
-  // 3. KIRIM KE BLYNK
-  // Kirim kebalikan (!flameState) agar:
-  // Kalau Sensor 1 (Aman) -> Kirim 0 (LED Mati)
-  // Kalau Sensor 0 (Api)  -> Kirim 1 (LED Nyala)
-  Blynk.virtualWrite(V0, !flameState); 
+  // Kirim nilai mentah ke Gauge di Blynk (Opsional, buat V1 di dashboard kalau mau lihat grafik)
+  // Blynk.virtualWrite(V1, flameValue);
 
-  // 4. LOGIKA ALARM (Active LOW)
-  // KITA KEMBALIKAN KE LOGIKA AWAL: 0 = BAHAYA
-  if (flameState == LOW) { 
+  // 3. LOGIKA ALARM ANALOG
+  // Sensor Api Analog:
+  // Nilai 4095 (Maksimal) = Gelap / Tidak Ada Api
+  // Nilai mendekati 0 = Api Sangat Besar
+  // Kita set "AMBANG BATAS" (Threshold). 
+  // Contoh: Jika nilai DI BAWAH 1000, berarti ada api.
+  
+  if (flameValue < 100) {  // <--- ANGKA 1000 INI BISA DIUBAH SESUAI KONDISI
     
-    // Nyalakan Buzzer
+    // KONDISI BAHAYA
     digitalWrite(pinBuzzer, HIGH);
-    Serial.println(">>> BAHAYA! API TERDETEKSI! (Logika 0) <<<");
+    Blynk.virtualWrite(V0, 1); // LED Nyala
+    Serial.println(">>> API TERDETEKSI! <<<");
 
-    // Kirim Notifikasi
     if (!isNotified) {
-      Blynk.logEvent("fire_alert", "AWAS! Api Terdeteksi!"); 
+      Blynk.logEvent("fire_alert", "AWAS! Api Terdeteksi!");
       isNotified = true;
     }
 
   } else {
-    // KONDISI AMAN (Nilai 1 / HIGH)
-    digitalWrite(pinBuzzer, LOW); 
+    // KONDISI AMAN (Nilai di atas 1000)
+    digitalWrite(pinBuzzer, LOW);
+    Blynk.virtualWrite(V0, 0); // LED Mati
     isNotified = false;
   }
 }
 
 void setup() {
-  Serial.begin(115200); // Baud rate ESP32
-
-  pinMode(pinFlame, INPUT);
+  Serial.begin(115200);
+  
+  // Analog pin tidak perlu pinMode INPUT, langsung baca saja owkaii??
   pinMode(pinBuzzer, OUTPUT);
-  digitalWrite(pinBuzzer, LOW); 
+  digitalWrite(pinBuzzer, LOW);
 
-  // Koneksi ke Blynk
   Blynk.begin(auth, ssid, pass);
-
-  // Jalankan checkSensor setiap 1 detik
   timer.setInterval(1000L, checkSensor);
 }
 

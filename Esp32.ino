@@ -1,6 +1,6 @@
 /* * Judul: Fire Alarm System with Blynk
  * Hardware: ESP32, Flame Sensor (D23), Buzzer (D21)
- * Author: Kelompok 2
+ * Author: Fariz Husain Albar
  */
 
 // --- KREDENSIAL BLYNK ---

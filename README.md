@@ -98,5 +98,6 @@ Kode logika yang digunakan:
 if (flameValue < 100) { // Jika nilai di bawah 100
    // Nyalakan Alarm & Kirim Notifikasi
 }
+```
 
 Disclaimer: Proyek ini dibuat untuk tugas Mata Kuliah Arsitektur Komputer.

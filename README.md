@@ -5,7 +5,7 @@
 **Bahasa:** C++ (Arduino IDE)
 
 ## Deskripsi Proyek
-Proyek ini adalah sistem peringatan dini kebakaran berbasis IoT (Internet of Things). Berbeda dengan sistem digital biasa, proyek ini menggunakan **Flame Sensor Analog** untuk mendeteksi intensitas api dengan lebih presisi. Sistem memberikan peringatan ganda:
+Proyek ini adalah sebuah sistem peringatan dini kebakaran berbasis IoT (Internet of Things). Berbeda dengan sistem digital biasa, proyek ini menggunakan **Flame Sensor Analog** untuk mendeteksi intensitas api dengan lebih presisi. Sistem memberikan peringatan ganda:
 1.  **Peringatan Lokal:** Suara alarm melalui Buzzer saat intensitas api melewati ambang batas.
 2.  **Peringatan Jarak Jauh:** Notifikasi ke smartphone melalui aplikasi Blynk.
 

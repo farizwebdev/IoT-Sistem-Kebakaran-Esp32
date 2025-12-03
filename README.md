@@ -29,7 +29,7 @@ Berikut adalah konfigurasi pin yang digunakan dalam kode program:
 | Komponen | Pin Komponen | Pin ESP32 | Keterangan |
 | :--- | :--- | :--- | :--- |
 | **Flame Sensor** | A0 (Analog Out) | **GPIO 34** | Input sinyal analog (ADC 1) |
-| | VCC | 3.3V / VIN | Sumber daya |
+| | VCC | 3.3V | Sumber daya |
 | | GND | GND | Ground |
 | **Buzzer** | Positif (+) | **GPIO 21** | Output suara |
 | | Negatif (-) | GND | Ground |

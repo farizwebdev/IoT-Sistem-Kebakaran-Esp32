@@ -100,4 +100,4 @@ if (flameValue < 100) { // Jika nilai di bawah 100
 }
 ```
 
-Disclaimer: Proyek ini dibuat untuk tugas Mata Kuliah Arsitektur Komputer.
+Disclaimer: Proyek ini dibuat untuk tugas Mata Kuliah Organisasi & Arsitektur Komputer.

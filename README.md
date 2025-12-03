@@ -18,7 +18,7 @@ Proyek ini adalah sebuah sistem peringatan dini kebakaran berbasis IoT (Internet
 ## Kebutuhan Hardware
 1.  **Microcontroller:** ESP32 Development Board (DOIT DEVKIT V1 atau sejenisnya).
 2.  **Sensor:** Flame Sensor (Sensor Api) - Menggunakan Pin Analog (A0).
-3.  **Output:** Active Buzzer (3.3V / 5V).
+3.  **Output:** Active Buzzer (3.3V).
 4.  **Koneksi:** Kabel Jumper & Breadboard.
 5.  **Power:** Kabel Micro USB.
 

@@ -21,7 +21,7 @@ Sistem terintegrasi dengan **Blynk IoT** untuk monitoring jarak jauh, menampilka
 ## Kebutuhan Hardware
 1.  **ESP32 Development Board** (DOIT DEVKIT V1).
 2.  **Flame Sensor** (KY-026 atau sejenisnya) - Mode Analog.
-3.  **Active Buzzer** 3.3V/5V.
+3.  **Active Buzzer** 3.3V.
 4.  Kabel Jumper & Breadboard.
 
 ## Konfigurasi Wiring (Pinout)

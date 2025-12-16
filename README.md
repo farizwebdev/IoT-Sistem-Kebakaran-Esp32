@@ -1,103 +1,79 @@
 # Fire Alarm System with Blynk (ESP32)
 
-**Author:** Fariz Husain Albar  
-**Platform:** ESP32 & Blynk IoT  
-**Bahasa:** C++ (Arduino IDE)
+**Penyusun:** Fariz Husain Albar    
+**Jurusan:** Informatika - UIN Sunan Kalijaga Yogyakarta  
+**Hardware:** ESP32, Flame Sensor, Buzzer  
 
 ## Deskripsi Proyek
-Proyek ini adalah sebuah sistem peringatan dini kebakaran berbasis IoT (Internet of Things). Berbeda dengan sistem digital biasa, proyek ini menggunakan **Flame Sensor Analog** untuk mendeteksi intensitas api dengan lebih presisi. Sistem memberikan peringatan ganda:
-1.  **Peringatan Lokal:** Suara alarm melalui Buzzer saat intensitas api melewati ambang batas.
-2.  **Peringatan Jarak Jauh:** Notifikasi ke smartphone melalui aplikasi Blynk.
+Sistem peringatan dini kebakaran berbasis IoT yang dirancang untuk mendeteksi intensitas api menggunakan sensor analog. Sistem ini dilengkapi dengan **algoritma smoothing** (rata-rata sampel) untuk pembacaan data yang stabil dan mengurangi *noise*.
+
+Sistem terintegrasi dengan **Blynk IoT** untuk monitoring jarak jauh, menampilkan status keamanan dalam 3 zona warna (Hijau, Kuning, Merah), serta mengirim notifikasi darurat ke smartphone.
 
 ## Fitur Utama
-* **Analog Monitoring:** Memantau intensitas api secara spesifik (Range nilai 0 - 4095).
-* **Push Notification:** Mengirim notifikasi *"AWAS! Api Terdeteksi!"* ke HP saat sensor mendeteksi api berbahaya.
-* **Indikator Visual:** Widget LED pada dashboard Blynk menyala saat ada api.
-* **Hardware Alert:** Buzzer berbunyi otomatis saat nilai analog sensor di bawah batas aman (threshold).
+* **Smart Smoothing:** Mengambil 20 sampel data sensor sebelum dikirim untuk hasil yang akurat.
+* **Real-time Monitoring:** Menampilkan intensitas api dalam persentase (0% - 100%).
+* **Dynamic UI:** Warna dashboard berubah otomatis sesuai kondisi:
+    * 🟢 **Hijau:** Aman.
+    * 🟡 **Kuning:** Waspada (Cahaya terang/Api jauh).
+    * 🔴 **Merah:** Bahaya (Api < 15cm).
+* **Peringatan Ganda:** Alarm fisik (Buzzer) dan Notifikasi Push ke HP ("AWAS! Api Terdeteksi Sangat Dekat!").
 
 ## Kebutuhan Hardware
-1.  **Microcontroller:** ESP32 Development Board (DOIT DEVKIT V1 atau sejenisnya).
-2.  **Sensor:** Flame Sensor (Sensor Api) - Menggunakan Pin Analog (A0).
-3.  **Output:** Active Buzzer (3.3V).
-4.  **Koneksi:** Kabel Jumper & Breadboard.
-5.  **Power:** Kabel Micro USB.
+1.  **ESP32 Development Board** (DOIT DEVKIT V1).
+2.  **Flame Sensor** (KY-026 atau sejenisnya) - Mode Analog.
+3.  **Active Buzzer** 3.3V/5V.
+4.  Kabel Jumper & Breadboard.
 
-## Diagram Rangkaian (Wiring)
+## Konfigurasi Wiring (Pinout)
+Sesuai dengan definisi kode `Fire_Alarm.ino`:
 
-Berikut adalah konfigurasi pin yang digunakan dalam kode program:
-
-| Komponen | Pin Komponen | Pin ESP32 | Keterangan |
+| Komponen | Pin Device | Pin ESP32 | Keterangan |
 | :--- | :--- | :--- | :--- |
-| **Flame Sensor** | A0 (Analog Out) | **GPIO 34** | Input sinyal analog (ADC 1) |
-| | VCC | 3.3V | Sumber daya |
+| **Flame Sensor** | A0 (Analog) | **GPIO 34** | Input data sensor |
+| | VCC | 3V3 / VIN | Power |
 | | GND | GND | Ground |
 | **Buzzer** | Positif (+) | **GPIO 21** | Output suara |
 | | Negatif (-) | GND | Ground |
 
-> **Catatan Penting:** Pastikan kabel sensor terhubung ke pin **A0 (Analog)**, bukan D0. Pin GPIO 34 pada ESP32 adalah pin *Input Only* yang khusus untuk membaca nilai analog.
+> **Note:** Pin GPIO 34 adalah pin *Input Only* yang terhubung ke ADC1, optimal untuk pembacaan sensor analog.
 
-## Konfigurasi Blynk
+## 📱 Konfigurasi Blynk Dashboard
+Untuk sinkronisasi data, atur **Datastreams** sebagai berikut:
 
-Untuk menjalankan proyek ini, atur Dashboard Blynk sebagai berikut:
+| Nama Stream | Virtual Pin | Tipe Data | Min/Max | Fungsi |
+| :--- | :--- | :--- | :--- | :--- |
+| **Status LED** | `V0` | Integer | 0 / 1 | Indikator visual alarm |
+| **Persentase Api** | `V1` | Integer | 0 / 100 | Grafik gauge intensitas |
+| **Status Teks** | `V2` | String | - | Menampilkan teks & warna dinamis |
 
-1.  **Template Setup:**
-    * **Name:** `Sistem Peringatan Kebakaran`
-    * **Hardware:** ESP32
-    * **Connection Type:** WiFi
+**Pengaturan Event (Notifikasi):**
+* Buat Event baru dengan kode: `fire_alert`
+* Type: **Critical**
+* Centang opsi: **Send Loop to Notifications**
 
-2.  **Datastreams:**
-    * **Virtual Pin V0:**
-        * Name: `Status Api`
-        * Data Type: `Integer`
-        * Min/Max: `0/1` (0 = Aman, 1 = Bahaya).
-    * *(Opsional)* **Virtual Pin V1:**
-        * Name: `Intensitas Api`
-        * Data Type: `Integer`
-        * Min/Max: `0/4095` (Untuk melihat grafik).
+## Logika Algoritma
+Sistem menggunakan logika *Inverse Analog* (Nilai rendah = Terang/Api).
 
-3.  **Events (Penting untuk Notifikasi):**
-    * Buat Event baru dengan kode: `fire_alert`
-    * Nama Event: `Fire Detection`
-    * Type: `Critical`
-    * Aktifkan opsi **"Send Loop to Notifications"** agar notifikasi masuk ke tab Notifications di HP.
+1.  **Zona Aman (Hijau)**
+    * Nilai Sensor: `> 2000`
+    * Aksi: Buzzer Mati, Status "Ruangan Aman".
+2.  **Zona Waspada (Kuning)**
+    * Nilai Sensor: `100 - 2000`
+    * Aksi: Buzzer Mati, Status "Waspada / Cahaya Terang".
+3.  **Zona Bahaya (Merah)**
+    * Nilai Sensor: `< 100` (Threshold Bahaya)
+    * Aksi: **Buzzer Bunyi**, LED Nyala, Notifikasi dikirim ke HP.
 
-## Cara Instalasi & Penggunaan
+## Cara Instalasi
+1.  Install **Arduino IDE** dan Library **Blynk** by Volodymyr Shymanskyy.
+2.  Buka file `Fire_Alarm.ino`.
+3.  Sesuaikan kredensial WiFi pada baris:
+    ```cpp
+    char ssid[] = "fariz"; 
+    char pass[] = "anakyuin"; 
+    ```
+4.  Pastikan `BLYNK_TEMPLATE_ID` sesuai dengan akun Blynk Anda.
+5.  Upload ke board ESP32.
 
-1.  **Persiapan Software:**
-    * Install [Arduino IDE](https://www.arduino.cc/en/software).
-    * Install Library Blynk: `Sketch` -> `Include Library` -> `Manage Libraries` -> Cari **Blynk** by Volodymyr Shymanskyy.
-    * Install Driver ESP32 Board pada Arduino IDE.
-
-2.  **Konfigurasi Kode:**
-    * Buka file `.ino`.
-    * Sesuaikan bagian kredensial WiFi pada baris berikut:
-        ```cpp
-        char ssid[] = "NAMA_WIFI_ANDA"; // Masukkan nama WiFi
-        char pass[] = "PASSWORD_WIFI_ANDA"; // Masukkan password WiFi
-        ```
-    * Pastikan `BLYNK_TEMPLATE_ID` dan `BLYNK_AUTH_TOKEN` sesuai dengan Dashboard Anda.
-
-3.  **Upload:**
-    * Hubungkan ESP32 ke komputer.
-    * Pilih Board dan Port yang sesuai di Arduino IDE.
-    * Klik tombol **Upload**.
-
-4.  **Pengujian & Kalibrasi:**
-    * Buka Serial Monitor (Baud rate **115200**).
-    * Lihat nilai yang muncul ("Nilai Analog Api: ...").
-    * Dekatkan api. Nilai akan turun drastis (misal dari 4000 menjadi 50).
-    * Jika Buzzer tidak bunyi, naikkan angka threshold di kodingan (default: 100).
-
-## Catatan Logika Sensor (Analog)
-Program ini menggunakan pembacaan ADC dengan logika kebalikan (Inverse):
-* **Nilai Tinggi (4095):** Gelap / Tidak ada api (Aman).
-* **Nilai Rendah (< 100):** Terang / Ada api (Bahaya).
-
-Kode logika yang digunakan:
-```cpp
-if (flameValue < 100) { // Jika nilai di bawah 100
-   // Nyalakan Alarm & Kirim Notifikasi
-}
-```
-
-Disclaimer: Proyek ini dibuat untuk tugas Mata Kuliah Organisasi & Arsitektur Komputer.
+---
+*Dibuat untuk tugas Mata Kuliah Organisasi & Arsitektur Komputer.*
